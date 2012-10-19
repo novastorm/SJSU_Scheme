@@ -18,16 +18,17 @@ var intern = function (x) {return {type:'SYMBOL', val:x}; };
 ;
 
 /~ Token pattern matching rules ~/
-	'\('    LPAREN
-	'\)'    RPAREN
-	'\.'    DOT
-	'\'' QUOTE
-	'\`' BACKQUOTE
-	'\,' COMMA
-	'\@' AT
-	'[0-9]+|[0-9]+\.[0-9]*|[0-9]*\.[0-9]+'	  NUMBER [* %match = parseFloat( %match ); *]
-	'[a-z][^\(\)\'\`\,\@\ ]*'  SYMBOL    /~ symbols cannot begin with digits, parens, quotes, dots, etc. ~/
-	'\"[^"]*\"'	STRING   [* %match = %match.substr( 1, %match.length - 2 ); *] 
+	'\('
+	'\)'
+	'\.'
+	'\''
+	'\`'
+	'\,'
+	'\@'
+ 
+ 	'[0-9]+|[0-9]+\.[0-9]*|[0-9]*\.[0-9]+'	  NUMBER [* %match = parseFloat( %match ); *]
+	'[^\(\)0-9\.\'\`\,\@" ][^\) ]*'  SYMBOL    /~ symbols cannot begin with digits, parens, quotes, dots, etc. ~/
+	'\"[^"]+\"'	STRING   [* %match = %match.substr( 1, %match.length - 2 ); *]
 
 ;
 
@@ -57,14 +58,14 @@ readonce:
 	;
 
 list:
-    LPAREN RPAREN	             [* %% = null; *]
-    | LPAREN members RPAREN      [* %% = %2; *]
+    '(' ')'	             [* %% = null; *]
+    | '(' members ')'      [* %% = %2; *]
 	;
 
 members:
 	sexpr            [* %% = cons(%1, NIL); *]
     | sexpr members      [* %% = cons(%1, %2); *] 
-    | sexpr DOT sexpr    [* %% = append_improper_tail(%1, %3); *]
+    | sexpr '.' sexpr    [* %% = append_improper_tail(%1, %3); *]
         ;
 
 sexpr:
