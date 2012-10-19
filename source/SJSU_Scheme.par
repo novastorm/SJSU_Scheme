@@ -1,0 +1,133 @@
+[*#!/usr/bin/env node
+var sexprCount = 0;
+var NIL = {type:'NIL', val: null};
+var cons = function (x, y) {return {type:'CONS', val:[x, y]}; };
+
+var list = function (x, y) { return cons(x, cons(y, NIL)); };
+var append_improper_tail = function (x, y) { return cons(x, y); };
+
+var dump = function (x) { console.log(JSON.stringify(x, null, 4)); };
+
+var intern = function (x) {return {type:'SYMBOL', val:x}; };
+*]
+
+/~ Tokens Definitions for Scheme Syntax ~/
+
+/~ Tokens to be ignored (e.g. whitespace, comments) ~/
+! '\ |\t|\r\n|\n|;[^\n]*\n' 
+;
+
+/~ Token pattern matching rules ~/
+	'\('    LPAREN
+	'\)'    RPAREN
+	'\.'    DOT
+	'\'' QUOTE
+	'\`' BACKQUOTE
+	'\,' COMMA
+	'\@' AT
+	'[0-9]+|[0-9]+\.[0-9]*|[0-9]*\.[0-9]+'	  NUMBER [* %match = parseFloat( %match ); *]
+	'[a-z][^\(\)\'\`\,\@\ ]*'  SYMBOL    /~ symbols cannot begin with digits, parens, quotes, dots, etc. ~/
+	'\"[^"]*\"'	STRING   [* %match = %match.substr( 1, %match.length - 2 ); *] 
+
+;
+
+##
+
+/~ Grammar rules ~/
+
+/~ if you like you can use a grammar rule to drive the REPL, but perhaps better to write a while loop...
+
+repl:   repl sexpr	 [* sexprCount++;
+	                    print(sexprCount + "> ");
+			    dump(%2);
+			  *]
+      | sexpr		 [* print("Welcome to SJSU Tiny Scheme\n");
+      			    sexprCount++;
+	                    print(sexprCount + "> ");
+			    dump(%2);
+			  *]
+
+	 ;
+~/
+
+readonce:
+    list [* /~ FIXME: add some code to print out your structure ~/ 
+		    dump(%1);
+	     *]
+	;
+
+list:
+    LPAREN RPAREN	             [* %% = null; *]
+    | LPAREN members RPAREN      [* %% = %2; *]
+	;
+
+members:
+	sexpr            [* %% = cons(%1, NIL); *]
+    | sexpr members      [* %% = cons(%1, %2); *] 
+    | sexpr DOT sexpr    [* %% = append_improper_tail(%1, %3); *]
+        ;
+
+sexpr:
+    list
+	| atom
+	;
+
+atom:
+    NUMBER     [* %% = {type:'number', val:%1}; *]
+    | STRING   [* %% = {type:'string', val:%1}; *]
+    | SYMBOL   [* %% = intern(%1); *]
+    ;
+
+[*
+var error_offsets = new Array();
+var error_lookaheads = new Array();
+var error_count = 0;
+
+/* Switching one of these variables on will enable debug facilities
+        of the various parser drivers */
+//##PREFIX##_dbg_withtrace = true;
+//##PREFIX##_dbg_withparsetree = true;
+//##PREFIX##_dbg_withstepbystep = true;
+
+var src_file = new String();
+
+// /~ FIXME: add a loop ~/
+
+
+// /~ FIXME: change this to do i/o from the console ~/
+var argv = process.argv.slice(2);
+
+for (var i in argv)
+{
+	if (src_file == "")
+	{
+		src_file = argv[i];
+	}
+}
+
+if (src_file.length) {
+    var file = require('fs').readFileSync(src_file, 'utf8');
+    process_input(file);
+}
+else {
+    process.stdin.resume();
+    process.stdin.setEncoding('utf8');
+    process.stdout.write("> ");
+
+    process.stdin.on('data', function(input) {
+    	process_input(input);
+	})
+}
+
+function process_input (input) {
+    if (input.length) {
+        if ((error_count = __##PREFIX##parse(input, error_offsets, error_lookaheads)) > 0 ) {
+            for( var i = 0; i < error_count; i++ )
+                console.log(
+                    "Parse error near \"" + input.substr( error_offsets[i] ) +
+                    "\", expecting \"" + error_lookaheads[i].join() + "\"" );
+        }
+ 	}
+ 	process.stdout.write("> ");
+}
+*]
