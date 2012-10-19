@@ -1,14 +1,23 @@
 [*#!/usr/bin/env node
 var sexprCount = 0;
-var NIL = {type:'NIL', val: null};
-var cons = function (x, y) {return {type:'CONS', val:[x, y]}; };
+var NIL = {type:'nil', val: null};
+var cons = function (x, y) {return {type:'cons', car:x, cdr:y}; };
 
 var list = function (x, y) { return cons(x, cons(y, NIL)); };
 var append_improper_tail = function (x, y) { return cons(x, y); };
 
 var dump = function (x) { console.log(JSON.stringify(x, null, 4)); };
 
-var intern = function (x) {return {type:'SYMBOL', val:x}; };
+var intern = function (x) {return {type:'symbol', val:x}; };
+
+var quote = function (x) { return list(intern("quote", x)); };
+var backquote = function (x) {return list(intern("backquote", x)); };
+var comma = function (x)  {return list(intern("comma", x)); };
+var at = function (x)  {return list(intern("at", x)); };
+
+var parseTree;
+var AList
+;
 *]
 
 /~ Tokens Definitions for Scheme Syntax ~/
@@ -37,9 +46,7 @@ var intern = function (x) {return {type:'SYMBOL', val:x}; };
 /~ Grammar rules ~/
 
 readonce:
-    list [* /~ FIXME: add some code to print out your structure ~/ 
-		    dump(%1);
-	     *]
+    list                [* parseTree = %1; *]
 	;
 
 list:
@@ -89,7 +96,8 @@ for (var i in argv)
 
 if (src_file.length) {
     var file = require('fs').readFileSync(src_file, 'utf8');
-    process_input(file);
+    if (parser(file) == 0)
+        evaluate(parseTree);
 }
 else {
     process.stdin.resume();
@@ -97,19 +105,72 @@ else {
     process.stdout.write("> ");
 
     process.stdin.on('data', function(input) {
-    	process_input(input);
+    	if(process_input(input.trim().toLowerCase()) == 0)
+        	evaluate(parseTree);
+
+    	process.stdout.write("> ");
 	})
 }
 
+
+/******************************************************************************
+
+    process_input
+
+ ******************************************************************************/
+
 function process_input (input) {
-    if (input.length) {
-        if ((error_count = __##PREFIX##parse(input, error_offsets, error_lookaheads)) > 0 ) {
-            for( var i = 0; i < error_count; i++ )
-                console.log(
-                    "Parse error near \"" + input.substr( error_offsets[i] ) +
-                    "\", expecting \"" + error_lookaheads[i].join() + "\"" );
-        }
- 	}
- 	process.stdout.write("> ");
+    switch (input) {
+        case '' :
+            break;
+
+        case 'quit' :
+            process.exit(1);
+
+        case 'parsetree' :
+            dump(parseTree);
+            break;
+
+        case 'alist' :
+            dump(AList);
+            break;
+
+        default :
+            parser(input);
+            return 0;
+    }
+ 
+    return 1;
+}
+
+
+/******************************************************************************
+ 
+    parser
+ 
+ ******************************************************************************/
+
+function parser (source) {
+    error_count = __##PREFIX##parse(source, error_offsets, error_lookaheads);
+ 
+    if (error_count == 0)
+        return 0;
+
+
+    for( var i = 0; i < error_count; i++ )
+        console.log(
+            "Parse error near \"" + source.substr( error_offsets[i] ) +
+            "\", expecting \"" + error_lookaheads[i].join() + "\"" );
+    return -1;
+}
+
+/******************************************************************************
+ 
+    evaluate
+ 
+ ******************************************************************************/
+
+function evaluate (sexpr) {
+    console.log("evaluate");
 }
 *]
