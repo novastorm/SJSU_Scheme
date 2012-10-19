@@ -36,21 +36,6 @@ var intern = function (x) {return {type:'SYMBOL', val:x}; };
 
 /~ Grammar rules ~/
 
-/~ if you like you can use a grammar rule to drive the REPL, but perhaps better to write a while loop...
-
-repl:   repl sexpr	 [* sexprCount++;
-	                    print(sexprCount + "> ");
-			    dump(%2);
-			  *]
-      | sexpr		 [* print("Welcome to SJSU Tiny Scheme\n");
-      			    sexprCount++;
-	                    print(sexprCount + "> ");
-			    dump(%2);
-			  *]
-
-	 ;
-~/
-
 readonce:
     list [* /~ FIXME: add some code to print out your structure ~/ 
 		    dump(%1);
@@ -92,10 +77,6 @@ var error_count = 0;
 
 var src_file = new String();
 
-// /~ FIXME: add a loop ~/
-
-
-// /~ FIXME: change this to do i/o from the console ~/
 var argv = process.argv.slice(2);
 
 for (var i in argv)
