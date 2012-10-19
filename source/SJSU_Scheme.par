@@ -96,7 +96,7 @@ for (var i in argv)
 
 if (src_file.length) {
     var file = require('fs').readFileSync(src_file, 'utf8');
-    if (parser(file) == 0)
+    if (parse(file) == 0)
         evaluate(parseTree);
 }
 else {
@@ -136,7 +136,7 @@ function process_input (input) {
             break;
 
         default :
-            parser(input);
+            parse(input);
             return 0;
     }
  
@@ -146,11 +146,11 @@ function process_input (input) {
 
 /******************************************************************************
  
-    parser
+    parse
  
  ******************************************************************************/
 
-function parser (source) {
+function parse (source) {
     error_count = __##PREFIX##parse(source, error_offsets, error_lookaheads);
  
     if (error_count == 0)
