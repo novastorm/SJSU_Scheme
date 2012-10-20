@@ -1,35 +1,44 @@
 /******************************************************************************
  
-    List.js
+    SymbolTable.js
  
  ******************************************************************************/
 var CONSTANT = require('./Constant.js');
 
 module.exports = {
-    _list : this.nil,
-
-    nil : {type:'nil', val: null},
+    _theList : null,
+    
+    initialize : function () {
+        this._theList = this.nil();
+    },
 
     cons : function (aCar, aCdr) { return {type:'cons', car:aCar, cdr:aCdr}; },
 
     improper : function (aCar, aCdr) { return this.cons(aCar, aCdr); },
 
-    symbol : function (aValue) { return {type:'symbol', val:aValue}; },
-
     element : function (aType, aValue) { return {type:aType, val:aValue}; },
     
+    nil : function () { return this.element('nil', null); },
+    
     
 
-    push : function (aCar, aCdr) { return this.cons(aCar, this.cons(aCdr, NIL)); },
+    push : function (element) {
+            var current = this._theList;
+            this._theList = this.cons(element, current);
+            return;
+        },
     
-    pop : function (aCar, aCdr) {
+    pop : function () {
             var result = this.car;
-            this._list = this.cdr;
+            this._theList = this.cdr;
             return result;
         },
 
-    peek : function (aCar, aCdr) { return this.car; },
+    peek : function () { return this.car; },
     
-    get_list : function () { return _list; },
+    head : function (aList) {
+            if (aList) this._theList = aList;
+            return this._theList; 
+        },
 };
 
