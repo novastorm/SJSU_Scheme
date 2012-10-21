@@ -32,7 +32,7 @@ theSymbolTable.initialize();
 /~ Grammar rules ~/
 
 expr:
-    list                [* theParseTree = %1; *]
+    sexpr                [* theParseTree = %1; *]
 	;
 
 list:
