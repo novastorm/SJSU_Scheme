@@ -4,12 +4,26 @@
  
  ******************************************************************************/
 var Constant = require('./Constant.js');
+var List = require('./List.js');
+
 
 function dump (x) {
     console.log(JSON.stringify(x, null, 4));
 };
 
 module.exports = {
+
+    initialize : function () {
+        this._AList = Object.create(List);
+        this._AList.initialize();
+    },
+
+    _AList : null,
+    
+    alist : function () {
+        return this._AList.head(); 
+    },
+
 
 /******************************************************************************
  
@@ -44,7 +58,6 @@ module.exports = {
  ******************************************************************************/
 
     process : function (aExpr) {
-        return aExpr;
         console.log('process');
         var theCar 
         var theCdr;
@@ -52,6 +65,7 @@ module.exports = {
         var theReturnValue;
         
         if (aExpr.type == Constant.CONS) { // a list
+            return aExpr;
             console.log('aExpr.type: ' + aExpr.type + ' <=> ' + Constant.CONS);
             theCar = aExpr.car;
             theCdr = aExpr.cdr;
@@ -76,8 +90,8 @@ module.exports = {
             theReturnValue = theCar;
         }
         else if (aExpr.type == Constant.SYMBOL){
-            console.log('aExpr.type: ' + aExpr.type + ' <=> ' + SYMBOL);
-            return ('aExpr.type: ' + aExpr.type + ' <=> ' + SYMBOL);
+            console.log('aExpr.type: ' + aExpr.type + ' <=> ' + Constant.SYMBOL);
+            return ('aExpr.type: ' + aExpr.type + ' <=> ' + Constant.SYMBOL);
         }
         else { // an atom
             console.log('atom :[' + aExpr.type + ']');
@@ -87,6 +101,16 @@ module.exports = {
         return theReturnValue;
     },
     
+
+/******************************************************************************
+ 
+    process_extended
+ 
+ ******************************************************************************/
+ 
+    process_extended : function (expr) {
+        
+    },
 
 /******************************************************************************
  
