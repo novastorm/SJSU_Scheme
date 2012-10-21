@@ -156,8 +156,7 @@ function process_input (input) {
             break;
 
         default :
-            parse(input);
-            return 0;
+            return parse(input);
     }
  
     return 1;
