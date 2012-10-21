@@ -44,6 +44,8 @@ module.exports = {
  ******************************************************************************/
 
     process : function (aExpr) {
+        return aExpr;
+        console.log('process');
         var theCar 
         var theCdr;
         
@@ -56,7 +58,7 @@ module.exports = {
             
             if (theCar.type == Constant.CONS) {
                 console.log('theCar.type: ' + theCar.type + ' <=> ' + Constant.CONS);
-                return this.process(theCar.car);
+                theCar = this.process(theCar.car);
             }
             
             if (theCar.type == Constant.SYMBOL) {
@@ -71,10 +73,11 @@ module.exports = {
             }
 
             console.log('type [' + theCar.type + '][' + theCar.val + ']');
-            theReturnValue = aExpr;
+            theReturnValue = theCar;
         }
         else if (aExpr.type == Constant.SYMBOL){
             console.log('aExpr.type: ' + aExpr.type + ' <=> ' + SYMBOL);
+            return ('aExpr.type: ' + aExpr.type + ' <=> ' + SYMBOL);
         }
         else { // an atom
             console.log('atom :[' + aExpr.type + ']');
@@ -96,7 +99,7 @@ module.exports = {
         if (expr.type == Constant.CONS) {
             if (expr.cdr.type == Constant.CONS || expr.cdr.type == Constant.NIL) {
                 console.log('LIST');
-                return '(' + this.display(expr.car) + this.display_more(expr.cdr, '');
+                return '(' + this.display(expr.car) + this.display_extended(expr.cdr, '');
             }
             else {
                 console.log('IMPROPER LIST');
@@ -112,15 +115,15 @@ module.exports = {
 
 /******************************************************************************
  
-    display_more
+    display_extended
  
  ******************************************************************************/
  
-    display_more : function (expr, string) {
+    display_extended : function (expr, string) {
         dump(expr);
         if (expr.type == Constant.CONS) {
             console.log('more CONS');
-            return this.display_more(expr.cdr, string + ' ' + this.display(expr.car));
+            return this.display_extended(expr.cdr, string + ' ' + this.display(expr.car));
         }
         else if (expr.type == Constant.NIL) {
             console.log('more NIL');
