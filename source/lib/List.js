@@ -1,6 +1,6 @@
 /******************************************************************************
  
-    SymbolTable.js
+    List.js
  
  ******************************************************************************/
 var CONSTANT = require('./Constant.js');
@@ -37,7 +37,7 @@ module.exports = {
     peek : function () { return this.car; },
     
     head : function (aList) {
-            if (aList) this._theList = aList;
+            if (aList != undefined) this._theList = aList;
             return this._theList; 
         },
 };
