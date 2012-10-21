@@ -45,5 +45,20 @@ module.exports = {
             if (aList != undefined) this._theList = aList;
             return this._theList; 
         },
+    
+    lookup : function (target) {
+            var node = this.head();
+            var symbol;
+            
+            while (node.type != Constant.NIL) {
+                if (node.car.car.val == target) {
+                    node = node.car;
+                    break;
+                }
+                node = node.cdr;
+            }
+            
+            return node;
+        },
 };
 
