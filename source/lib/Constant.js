@@ -6,7 +6,7 @@
 
 module.exports = {
     
-	NULL   : 'null',
+	NIL   : 'nil',
  	NUMBER : 'number',
 	SYMBOL : 'symbol',
 	STRING : 'string',
