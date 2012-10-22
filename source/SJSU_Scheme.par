@@ -1,5 +1,5 @@
 [*#!/usr/bin/env node
-var CONSTANT = require('./source/lib/Constant.js');
+var Constant = require('./source/lib/Constant.js');
 var List = require('./source/lib/List.js');
 var Evaluator = require('./source/lib/Evaluator.js');
 
