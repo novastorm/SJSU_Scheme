@@ -47,13 +47,18 @@ module.exports = {
         self = this;
         AList = Object.create(List);
         AList.initialize();
+        var key, value;
+        
         for ( i in self._primitive) {
-            AList.push(
-                List.cons(
-                    List.element(Constant.SYMBOL, self._primitive[i].symbol),
-                    List.element(Constant.PRIMITIVE, i)
-                )
-            );
+            key = List.element(Constant.SYMBOL, self._primitive[i].symbol);
+            if (self._primitive[i].operation.type == undefined) {
+                value = List.element(Constant.PRIMITIVE, i);
+            }
+            else {
+                value = self._primitive[i].operation;
+            }
+            
+            AList.push(List.cons(key, value));
         }
     },
 
@@ -93,6 +98,10 @@ module.exports = {
         }
         else if (aExpr.type == Constant.SYMBOL){
 //            console.log('aExpr.type: ' + aExpr.type + ' <=> ' + Constant.SYMBOL);
+            node = AList.lookup(aExpr.val);
+            if (node.type == Constant.PRIMITIVE) {
+                return self._primitive[node.val].operation;
+            }
             return AList.lookup(aExpr.val);
         }
         else { // an atom
@@ -124,7 +133,14 @@ module.exports = {
         if (theCar.type == Constant.SYMBOL) {
 //            console.log('theCar.type: ' + theCar.type + ' <=> ' + Constant.SYMBOL);
             node = AList.lookup(theCar.val);
-            return self._primitive[node.val].operation(aExpr.cdr);
+            dump(node);
+            if (node.type == Constant.PRIMITIVE) {
+                dump(aExpr);
+                return self._primitive[node.val].operation(aExpr.cdr);
+            }
+            else {
+                return node;
+            }
         }
         else if (theCar.type == Constant.LAMBDA) {
 //            console.log('theCar.type: ' + theCar.type + ' <=> ' + Constant.LAMBDA);
@@ -230,10 +246,11 @@ module.exports = {
         {
             symbol : '+',
             operation : function (sexpr) {
-                var result = sexpr.car;
+                var result = List.element('number', 0);
 
-                while (sexpr = sexpr.cdr, sexpr.type != Constant.NIL) {
+                while (sexpr.type != Constant.NIL) {
                     result.val += self.evaluate(sexpr.car);
+                    sexpr = sexpr.cdr
                 }
 
                 return result;
@@ -296,15 +313,11 @@ module.exports = {
         },
         {
             symbol : Constant.TRUE,
-            operation : function (sexpr) {
-                return List.element('boolean', Constant.TRUE);
-            }
+            operation : List.element('boolean', Constant.TRUE)
         },
         {
             symbol : Constant.FALSE,
-            operation : function (sexpr) {
-                return List.element('boolean', Constant.FALSE);
-            }
+            operation : List.element('boolean', Constant.FALSE)
         },
     ],
         
