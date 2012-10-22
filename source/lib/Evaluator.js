@@ -77,6 +77,7 @@ module.exports = {
         if (aExpr == null) return aExpr;
         
         var theResults = self.process(aExpr);
+//        dump(theResults);
         
         return self.display(theResults);
     },
@@ -99,10 +100,14 @@ module.exports = {
         else if (aExpr.type == Constant.SYMBOL){
 //            console.log('aExpr.type: ' + aExpr.type + ' <=> ' + Constant.SYMBOL);
             node = AList.lookup(aExpr.val);
-            if (node.type == Constant.PRIMITIVE) {
+            if (node.type == Constant.NIL) {
+                console.log("Undefined symbol: " + aExpr.val);
+                return null;
+            }
+            else if (node.type == Constant.PRIMITIVE) {
                 return self._primitive[node.val].operation;
             }
-            return AList.lookup(aExpr.val);
+            return node;
         }
         else { // an atom
 //            console.log('atom :[' + aExpr.type + ']');
@@ -122,8 +127,8 @@ module.exports = {
     process_extended : function (aExpr) {
         var theReturnValue;
         
-        theCar = aExpr.car;
-        theCdr = aExpr.cdr;
+        var theCar = aExpr.car;
+        var theCdr = aExpr.cdr;
         
         if (theCar.type == Constant.CONS) {
 //            console.log('theCar.type: ' + theCar.type + ' <=> ' + Constant.CONS);
@@ -133,13 +138,19 @@ module.exports = {
         if (theCar.type == Constant.SYMBOL) {
 //            console.log('theCar.type: ' + theCar.type + ' <=> ' + Constant.SYMBOL);
             node = AList.lookup(theCar.val);
-            dump(node);
             if (node.type == Constant.PRIMITIVE) {
-                dump(aExpr);
                 return self._primitive[node.val].operation(aExpr.cdr);
             }
-            else {
+            else if (node.type == Constant.LAMBDA) {
+                console.log('process_extended LAMBDA');
+                return List.nil;
+            }
+            else if (node.type != Constant.NIL) {
                 return node;
+            }
+            else {
+                console.log("Undefined symbol: " + theCar.val);
+                return null;
             }
         }
         else if (theCar.type == Constant.LAMBDA) {
@@ -172,6 +183,12 @@ module.exports = {
         }
         else {
 //            console.log('ATOM');
+            if (expr.type == Constant.STRING) {
+                return '"' + expr.val + '"';
+            }
+            else if (expr.type == Constant.NUMBER) {
+                return expr.val.toString();
+            }
             return expr.val;
         }
     },
@@ -213,7 +230,7 @@ module.exports = {
                 var length = size(sexpr);
                 var node, value;
                 
-                if (sexpr.car.type != Constant.SYMBOL) {
+                if (length < 1) {
                     console.log('bad syntax');
                 }
                 else if (length == 1) {
@@ -247,9 +264,15 @@ module.exports = {
             symbol : '+',
             operation : function (sexpr) {
                 var result = List.element('number', 0);
-
+                var valueNode;
+                
                 while (sexpr.type != Constant.NIL) {
-                    result.val += self.evaluate(sexpr.car);
+                    valueNode = self.process(sexpr.car);
+                    if (valueNode == null) {
+                        result = List.NIL;
+                        break;
+                    }
+                    result.val += valueNode.val;
                     sexpr = sexpr.cdr
                 }
 
@@ -259,10 +282,17 @@ module.exports = {
         {
             symbol : '-',
             operation : function (sexpr) {
-                var result = sexpr.car;
-
-                while (sexpr = sexpr.cdr, sexpr.type != Constant.NIL) {
-                    result.val -= self.evaluate(sexpr.car);
+                var result = List.element('number', 0);
+                var valueNode;
+                
+                while (sexpr.type != Constant.NIL) {
+                    valueNode = self.process(sexpr.car);
+                    if (valueNode == null) {
+                        result = List.NIL;
+                        break;
+                    }
+                    result.val -= valueNode.val;
+                    sexpr = sexpr.cdr
                 }
 
                 return result;
@@ -271,10 +301,17 @@ module.exports = {
         {
             symbol : '*',
             operation : function (sexpr) {
-                var result = sexpr.car;
-
-                while (sexpr = sexpr.cdr, sexpr.type != Constant.NIL) {
-                    result.val *= self.evaluate(sexpr.car);
+                var result = List.element('number', 1);
+                var valueNode;
+                
+                while (sexpr.type != Constant.NIL) {
+                    valueNode = self.process(sexpr.car);
+                    if (valueNode == null) {
+                        result = List.NIL;
+                        break;
+                    }
+                    result.val *= valueNode.val;
+                    sexpr = sexpr.cdr
                 }
 
                 return result;
@@ -283,16 +320,35 @@ module.exports = {
         {
             symbol : '/',
             operation : function (sexpr) {
-                result = sexpr.car;
+                var result = List.nil;
+                var valueNode;
+                var length = size(sexpr);
                 
-                if (sexpr.cdr.type == Constant.NIL) {
-                    result.val = 1 / result.val;
+                if (length < 1) {
+                    console.log('bad syntax expected: at least 1 argument');
                 }
                 else {
-                    while (sexpr = sexpr.cdr, sexpr.type != Constant.NIL) {
-                        result.val /= self.evaluate(sexpr.car);
+                    result = self.process(sexpr.car);
+                    if (result == null) {
+                        return List.NIL;
                     }
-                }
+                  
+                    sexpr = sexpr.cdr
+                  
+                    if (sexpr.type == Constant.NIL) {
+                        result.val = 1 / result.val;
+                    }
+                    else {
+                        while (sexpr.type != Constant.NIL) {
+                            valueNode = self.process(sexpr.car);
+                            if (valueNode == null) {
+                                return List.NIL;
+                            }
+                            result.val /= valueNode.val;
+                            sexpr = sexpr.cdr
+                        }
+                    }
+                  }
 
                 return result;
             }
@@ -318,6 +374,31 @@ module.exports = {
         {
             symbol : Constant.FALSE,
             operation : List.element('boolean', Constant.FALSE)
+        },
+        {
+            symbol : 'if',
+            operation : function (sexpr) {
+                var length = size(sexpr);
+                var node, value;
+                var condition, ifTrue, ifFalse;
+                
+                if (length != 3) {
+                    console.log('bad syntax');
+                    console.log('has ' + length + ' parts after keyword');
+                }
+                else {
+                    condition = sexpr.car;
+                    ifTrue = sexpr.cdr.car;
+                    ifFalse = sexpr.cdr.cdr.car;
+                    if (self.process(condition).val == Constant.TRUE) {
+                        value = self.process(ifTrue);
+                    }
+                    else{
+                        value = self.process(ifFalse);
+                    }
+                }
+                return value;
+            }
         },
     ],
         
