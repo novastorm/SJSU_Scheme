@@ -71,20 +71,9 @@ module.exports = {
     evaluate : function (aExpr) {
         if (aExpr == null) return aExpr;
         
-        var theReturnValue;
-        
         var theResults = self.process(aExpr);
-//        dump (theResults);
         
-        if ((theResults != undefined)
-          && (theResults.type == Constant.CONS || theResults.type == Constant.NIL)) {
-            return self.display(theResults);
-        }
-        else {
-            theReturnValue = theResults;
-        }
-        
-        return theReturnValue;
+        return self.display(theResults);
     },
     
 
@@ -108,7 +97,7 @@ module.exports = {
         }
         else { // an atom
 //            console.log('atom :[' + aExpr.type + ']');
-            return aExpr.val;
+            return aExpr;
         }
         
         return theReturnValue;
@@ -122,6 +111,7 @@ module.exports = {
  ******************************************************************************/
  
     process_extended : function (aExpr) {
+        dump(aExpr);
         var theReturnValue;
         
         theCar = aExpr.car;
@@ -154,7 +144,9 @@ module.exports = {
  ******************************************************************************/
  
     display : function (expr) {
-//        dump(expr);
+        console.log('display');
+        dump(expr);
+        if (expr == undefined) return '';
         if (expr.type == Constant.CONS) {
             if (expr.cdr.type == Constant.CONS || expr.cdr.type == Constant.NIL) {
 //                console.log('display LIST');
@@ -206,7 +198,7 @@ module.exports = {
             symbol : 'define',
             operation : function (sexpr) {
                 var length = size(sexpr);
-                var node;
+                var node, value;
                 
                 if (sexpr.car.type != Constant.SYMBOL) {
                     console.log('bad syntax');
@@ -218,15 +210,27 @@ module.exports = {
                     console.log('bad syntax (multiple expressions after identifier)');
                 }
                 else {
+                    dump(sexpr);
+                    if (sexpr.cdr.type = Constant.CONS) {
+                        value = self.process(sexpr.cdr.car);                        
+                    }
+                    else{
+                        value = sexpr.cdr;
+                    }
+
+                    console.log('value');
+                    dump(value);
                     node = AList.lookup(sexpr.car.val);
-                    if (node) {
-                        node.val = sexpr.cdr.car.val;
+                    
+                    if (node.type != Constant.NIL) {
+                        node.type = value.type;
+                        node.val = value.val;
                     }
                     else {
-                        AList.push(List.improper(sexpr.car, sexpr.cdr.car));
+                        AList.push(List.improper(sexpr.car, value));
                     }
                 }
-                return;
+                return value.val;
             }
         },
         {
@@ -235,7 +239,7 @@ module.exports = {
                 var result = 0;
 
                 while (sexpr.type != Constant.NIL) {
-                    result += self.process(sexpr.car);
+                    result += self.evaluate(sexpr.car);
                     sexpr = sexpr.cdr;
                 }
 
@@ -274,7 +278,7 @@ module.exports = {
                 var result = 1;
 
                 if (sexpr.cdr.type == Constant.NIL) {
-                    result /= self.process(sexpr.car)
+                    result /=self.process(sexpr.car)
                 }
                 else {
                     result = self.process(sexpr.car);
