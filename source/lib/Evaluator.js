@@ -280,6 +280,20 @@ module.exports = {
                 return result;
             }
         },
+        {
+            symbol : 'quote',
+            operation : function (sexpr) {
+                var length = size(sexpr);
+                var node, value;
+                
+                if (length != 1) {
+                    console.log('bad syntax');
+                }
+                else {
+                    return sexpr.car;
+                }
+            }
+        },
     ],
         
  
