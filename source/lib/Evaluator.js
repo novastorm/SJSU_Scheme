@@ -111,7 +111,6 @@ module.exports = {
  ******************************************************************************/
  
     process_extended : function (aExpr) {
-        dump(aExpr);
         var theReturnValue;
         
         theCar = aExpr.car;
@@ -144,8 +143,6 @@ module.exports = {
  ******************************************************************************/
  
     display : function (expr) {
-        console.log('display');
-        dump(expr);
         if (expr == undefined) return '';
         if (expr.type == Constant.CONS) {
             if (expr.cdr.type == Constant.CONS || expr.cdr.type == Constant.NIL) {
@@ -218,8 +215,6 @@ module.exports = {
                         value = sexpr.cdr;
                     }
 
-                    console.log('value');
-                    dump(value);
                     node = AList.lookup(sexpr.car.val);
                     
                     if (node.type != Constant.NIL) {
@@ -236,11 +231,10 @@ module.exports = {
         {
             symbol : '+',
             operation : function (sexpr) {
-                var result = 0;
+                var result = sexpr.car;
 
-                while (sexpr.type != Constant.NIL) {
-                    result += self.evaluate(sexpr.car);
-                    sexpr = sexpr.cdr;
+                while (sexpr = sexpr.cdr, sexpr.type != Constant.NIL) {
+                    result.val += self.evaluate(sexpr.car);
                 }
 
                 return result;
@@ -249,11 +243,10 @@ module.exports = {
         {
             symbol : '-',
             operation : function (sexpr) {
-                var result = 0;
+                var result = sexpr.car;
 
-                while (sexpr.type != Constant.NIL) {
-                    result -= self.process(sexpr.car);
-                    sexpr = sexpr.cdr;
+                while (sexpr = sexpr.cdr, sexpr.type != Constant.NIL) {
+                    result.val -= self.evaluate(sexpr.car);
                 }
 
                 return result;
@@ -262,11 +255,10 @@ module.exports = {
         {
             symbol : '*',
             operation : function (sexpr) {
-                var result = 1;
+                var result = sexpr.car;
 
-                while (sexpr.type != Constant.NIL) {
-                    result *= self.process(sexpr.car);
-                    sexpr = sexpr.cdr;
+                while (sexpr = sexpr.cdr, sexpr.type != Constant.NIL) {
+                    result.val *= self.evaluate(sexpr.car);
                 }
 
                 return result;
@@ -275,17 +267,14 @@ module.exports = {
         {
             symbol : '/',
             operation : function (sexpr) {
-                var result = 1;
-
+                result = sexpr.car;
+                
                 if (sexpr.cdr.type == Constant.NIL) {
-                    result /=self.process(sexpr.car)
+                    result.val = 1 / result.val;
                 }
                 else {
-                    result = self.process(sexpr.car);
-                    sexpr = sexpr.cdr;
-                    while (sexpr.type != Constant.NIL) {
-                        result /= self.process(sexpr.car);
-                        sexpr = sexpr.cdr;
+                    while (sexpr = sexpr.cdr, sexpr.type != Constant.NIL) {
+                        result.val /= self.evaluate(sexpr.car);
                     }
                 }
 
