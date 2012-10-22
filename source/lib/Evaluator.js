@@ -294,6 +294,18 @@ module.exports = {
                 }
             }
         },
+        {
+            symbol : Constant.TRUE,
+            operation : function (sexpr) {
+                return List.element('boolean', Constant.TRUE);
+            }
+        },
+        {
+            symbol : Constant.FALSE,
+            operation : function (sexpr) {
+                return List.element('boolean', Constant.FALSE);
+            }
+        },
     ],
         
  
