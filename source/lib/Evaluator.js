@@ -207,7 +207,6 @@ module.exports = {
                     console.log('bad syntax (multiple expressions after identifier)');
                 }
                 else {
-                    dump(sexpr);
                     if (sexpr.cdr.type = Constant.CONS) {
                         value = self.process(sexpr.cdr.car);                        
                     }
@@ -225,7 +224,7 @@ module.exports = {
                         AList.push(List.improper(sexpr.car, value));
                     }
                 }
-                return value.val;
+                return value;
             }
         },
         {
