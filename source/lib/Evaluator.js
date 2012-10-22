@@ -47,11 +47,14 @@ module.exports = {
     initialize : function () {
         this._AList = Object.create(List);
         this._AList.initialize();
-        var cons_add = List.cons(
-                List.element(Constant.SYMBOL, this._primitive[0].symbol),
-                List.element(Constant.PRIMATIVE, 0)
+        for ( i in this._primitive) {
+            this._AList.push(
+                List.cons(
+                    List.element(Constant.SYMBOL, this._primitive[i].symbol),
+                    List.element(Constant.PRIMITIVE, i)
+                )
             );
-        this._AList.push(cons_add);
+        }
     },
 
     alist : function () {
@@ -92,48 +95,19 @@ module.exports = {
 
     process : function (aExpr) {
         console.log('process');
-        var theCar;
-        var theCdr;
-        var node;
-        
         var theReturnValue;
         
         if (aExpr.type == Constant.CONS) { // a list
             console.log('aExpr.type: ' + aExpr.type + ' <=> ' + Constant.CONS);
-            theCar = aExpr.car;
-            theCdr = aExpr.cdr;
-            
-            if (theCar.type == Constant.CONS) {
-                console.log('theCar.type: ' + theCar.type + ' <=> ' + Constant.CONS);
-                theCar = this.process(theCar.car);
-            }
-            
-            if (theCar.type == Constant.SYMBOL) {
-                console.log('theCar.type: ' + theCar.type + ' <=> ' + Constant.SYMBOL);
-                if ( theCar.val == '+') {
-/*
-                    console.log('cdar[' + theCdr.car.val + '] cddar[' + theCdr.cdr.car.val + ']');
-                    return (theCdr.car.val + theCdr.cdr.car.val);
-*/
-                    node = this._AList.lookup(theCar.val);
-                    return this._primitive[node.cdr.val].operation(theCdr);
-                }
-            }
-            else if (theCar.type == Constant.LAMBDA) {
-                console.log('theCar.type: ' + theCar.type + ' <=> ' + Constant.LAMBDA);
-            }
-
-            console.log('type [' + theCar.type + '][' + theCar.val + ']');
-            theReturnValue = theCar;
+            return this.process_extended(aExpr);
         }
         else if (aExpr.type == Constant.SYMBOL){
             console.log('aExpr.type: ' + aExpr.type + ' <=> ' + Constant.SYMBOL);
             return this._AList.lookup(aExpr.val);
-            return ('aExpr.type: ' + aExpr.type + ' <=> ' + Constant.SYMBOL);
         }
         else { // an atom
             console.log('atom :[' + aExpr.type + ']');
-            theReturnValue = aExpr.val;
+            return aExpr.val;
         }
         
         return theReturnValue;
@@ -146,8 +120,30 @@ module.exports = {
  
  ******************************************************************************/
  
-    process_extended : function (expr) {
+    process_extended : function (aExpr) {
+        var theReturnValue;
         
+        theCar = aExpr.car;
+        theCdr = aExpr.cdr;
+        
+        if (theCar.type == Constant.CONS) {
+            console.log('theCar.type: ' + theCar.type + ' <=> ' + Constant.CONS);
+            theCar = this.process(theCar.car);
+        }
+        
+        if (theCar.type == Constant.SYMBOL) {
+            console.log('theCar.type: ' + theCar.type + ' <=> ' + Constant.SYMBOL);
+            node = this._AList.lookup(theCar.val);
+            return this._primitive[node.val].operation(theCdr);
+        }
+        else if (theCar.type == Constant.LAMBDA) {
+            console.log('theCar.type: ' + theCar.type + ' <=> ' + Constant.LAMBDA);
+        }
+
+        console.log('type [' + theCar.type + '][' + theCar.val + ']');
+        theReturnValue = theCar;
+        
+        return theReturnValue;
     },
 
 /******************************************************************************
@@ -205,6 +201,12 @@ module.exports = {
  ******************************************************************************/
  
     _primitive : [
+        {
+            symbol : 'def',
+            operation : function (sexpr) {
+                
+            }
+        },
         {
             symbol : '+',
             operation : function (sexpr) {
