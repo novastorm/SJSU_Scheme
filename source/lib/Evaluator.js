@@ -5,6 +5,7 @@
  ******************************************************************************/
 var Constant = require('./Constant.js');
 var List = require('./List.js');
+var AList;
 
 
 
@@ -21,11 +22,11 @@ function dump (x) {
 
 /******************************************************************************
  
-    length
+    size
  
  ******************************************************************************/
 
-function length (expr) {
+function size (expr) {
     var count = 0;
     while (expr.type != Constant.NIL) {
         count++;
@@ -42,13 +43,11 @@ function length (expr) {
  ******************************************************************************/
 
 module.exports = {
-    _AList : null,
-    
     initialize : function () {
-        this._AList = Object.create(List);
-        this._AList.initialize();
+        AList = Object.create(List);
+        AList.initialize();
         for ( i in this._primitive) {
-            this._AList.push(
+            AList.push(
                 List.cons(
                     List.element(Constant.SYMBOL, this._primitive[i].symbol),
                     List.element(Constant.PRIMITIVE, i)
@@ -58,7 +57,7 @@ module.exports = {
     },
 
     alist : function () {
-        return this._AList.head(); 
+        return AList.head(); 
     },
 
 
@@ -76,8 +75,9 @@ module.exports = {
         var theResults = this.process(aExpr);
 //        dump (theResults);
         
-        if (theResults.type == Constant.CONS || theResults.type == Constant.NIL) {
-            theReturnValue = this.display(theResults);
+        if ((theResults != undefined)
+          && (theResults.type == Constant.CONS || theResults.type == Constant.NIL)) {
+            return this.display(theResults);
         }
         else {
             theReturnValue = theResults;
@@ -94,19 +94,19 @@ module.exports = {
  ******************************************************************************/
 
     process : function (aExpr) {
-        console.log('process');
+//        console.log('process');
         var theReturnValue;
         
         if (aExpr.type == Constant.CONS) { // a list
-            console.log('aExpr.type: ' + aExpr.type + ' <=> ' + Constant.CONS);
+//            console.log('aExpr.type: ' + aExpr.type + ' <=> ' + Constant.CONS);
             return this.process_extended(aExpr);
         }
         else if (aExpr.type == Constant.SYMBOL){
             console.log('aExpr.type: ' + aExpr.type + ' <=> ' + Constant.SYMBOL);
-            return this._AList.lookup(aExpr.val);
+            return AList.lookup(aExpr.val);
         }
         else { // an atom
-            console.log('atom :[' + aExpr.type + ']');
+//            console.log('atom :[' + aExpr.type + ']');
             return aExpr.val;
         }
         
@@ -127,20 +127,20 @@ module.exports = {
         theCdr = aExpr.cdr;
         
         if (theCar.type == Constant.CONS) {
-            console.log('theCar.type: ' + theCar.type + ' <=> ' + Constant.CONS);
+//            console.log('theCar.type: ' + theCar.type + ' <=> ' + Constant.CONS);
             theCar = this.process(theCar.car);
         }
         
         if (theCar.type == Constant.SYMBOL) {
             console.log('theCar.type: ' + theCar.type + ' <=> ' + Constant.SYMBOL);
-            node = this._AList.lookup(theCar.val);
-            return this._primitive[node.val].operation(theCdr);
+            node = AList.lookup(theCar.val);
+            return this._primitive[node.val].operation(aExpr.cdr);
         }
         else if (theCar.type == Constant.LAMBDA) {
-            console.log('theCar.type: ' + theCar.type + ' <=> ' + Constant.LAMBDA);
+//            console.log('theCar.type: ' + theCar.type + ' <=> ' + Constant.LAMBDA);
         }
 
-        console.log('type [' + theCar.type + '][' + theCar.val + ']');
+//        console.log('type [' + theCar.type + '][' + theCar.val + ']');
         theReturnValue = theCar;
         
         return theReturnValue;
@@ -165,7 +165,7 @@ module.exports = {
             }
         }
         else {
-//            console.log('ATOM');
+            console.log('ATOM');
             return expr.val;
         }
     },
@@ -202,20 +202,42 @@ module.exports = {
  
     _primitive : [
         {
-            symbol : 'def',
+            symbol : 'define',
             operation : function (sexpr) {
+                var length = size(sexpr);
+                var node;
                 
+                if (sexpr.car.type != Constant.SYMBOL) {
+                    console.log('bad syntax');
+                }
+                else if (length == 1) {
+                    console.log('bad syntax (missing expression after identifier)');
+                }
+                else if (length > 2) {
+                    console.log('bad syntax (multiple expressions after identifier)');
+                }
+                else {
+                    node = AList.lookup(sexpr.car.val);
+                    if (node) {
+                        node.val = sexpr.cdr.car.val;
+                    }
+                    else {
+                        AList.push(List.improper(sexpr.car, sexpr.cdr.car));
+                    }
+                }
+                return;
             }
         },
         {
             symbol : '+',
             operation : function (sexpr) {
-                console.log('add');
                 var result = 0;
+
                 while (sexpr.type != Constant.NIL) {
                     result += sexpr.car.val;
                     sexpr = sexpr.cdr;
                 }
+
                 return result;
             }
         },
@@ -223,10 +245,12 @@ module.exports = {
             symbol : '-',
             operation : function (sexpr) {
                 var result = 0;
+
                 while (sexpr.type != Constant.NIL) {
                     result -= sexpr.car.val;
                     sexpr = sexpr.cdr;
                 }
+
                 return result;
             }
         }
