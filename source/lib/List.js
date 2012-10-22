@@ -3,7 +3,12 @@
     List.js
  
  ******************************************************************************/
-var CONSTANT = require('./Constant.js');
+var Constant = require('./Constant.js');
+
+
+function dump (x) {
+    console.log(JSON.stringify(x, null, 4));
+};
 
 module.exports = {
     _theList : null,
@@ -39,6 +44,21 @@ module.exports = {
     head : function (aList) {
             if (aList != undefined) this._theList = aList;
             return this._theList; 
+        },
+    
+    lookup : function (target) {
+            var node = this.head();
+            var symbol;
+            
+            while (node.type != Constant.NIL) {
+                if (node.car.car.val == target) {
+                    node = node.car.cdr;
+                    break;
+                }
+                node = node.cdr;
+            }
+            
+            return node;
         },
 };
 
