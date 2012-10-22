@@ -52,7 +52,7 @@ module.exports = {
             
             while (node.type != Constant.NIL) {
                 if (node.car.car.val == target) {
-                    node = node.car;
+                    node = node.car.cdr;
                     break;
                 }
                 node = node.cdr;
