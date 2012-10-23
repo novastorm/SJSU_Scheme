@@ -87,13 +87,18 @@ if (src_file.length) {
         console.log(Evaluator.evaluate(theParseTree));
 }
 else {
+    var result;
     process.stdin.resume();
     process.stdin.setEncoding('utf8');
     process.stdout.write("> ");
 
     process.stdin.on('data', function(input) {
-    	if(process_input(input.trim().toLowerCase()) == 0)
-        	console.log(Evaluator.evaluate(theParseTree));
+    	if(process_input(input.trim().toLowerCase()) == 0) {
+            result = Evaluator.evaluate(theParseTree);
+            if (result) {
+                console.log(result);
+            }
+        }
 
     	process.stdout.write("> ");
 	})
