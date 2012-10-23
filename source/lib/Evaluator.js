@@ -250,6 +250,7 @@ module.exports = {
                     node = AList.lookup(sexpr.car.val);
                     
                     if (node.type != Constant.NIL) {
+                        node = {};
                         node.type = value.type;
                         node.val = value.val;
                     }
