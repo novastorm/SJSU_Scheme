@@ -329,10 +329,6 @@ module.exports = {
                 }
                 else {
                     result = self.process(sexpr.car);
-                    if (result == null) {
-                        return List.NIL;
-                    }
-                  
                     sexpr = sexpr.cdr
                   
                     if (sexpr.type == Constant.NIL) {
@@ -348,7 +344,7 @@ module.exports = {
                             sexpr = sexpr.cdr
                         }
                     }
-                  }
+                }
 
                 return result;
             }
@@ -357,7 +353,6 @@ module.exports = {
             symbol : 'quote',
             operation : function (sexpr) {
                 var length = size(sexpr);
-                var node, value;
                 
                 if (length != 1) {
                     console.log('bad syntax');
@@ -379,7 +374,7 @@ module.exports = {
             symbol : 'if',
             operation : function (sexpr) {
                 var length = size(sexpr);
-                var node, value;
+                var node;
                 var condition, ifTrue, ifFalse;
                 
                 if (length != 3) {
@@ -391,20 +386,20 @@ module.exports = {
                     ifTrue = sexpr.cdr.car;
                     ifFalse = sexpr.cdr.cdr.car;
                     if (self.process(condition).val == Constant.FALSE) {
-                        value = self.process(ifFalse);
+                        node = self.process(ifFalse);
                     }
                     else {
-                        value = self.process(ifTrue);
+                        node = self.process(ifTrue);
                     }
                 }
-                return value;
+                return node;
             }
         },
         {
             symbol : 'lambda',
             operation : function (sexpr) {
                 var length = size(sexpr);
-                var node, value;
+                var node;
                 var condition, ifTrue, ifFalse;
                 
                 if (length != 2) {
