@@ -397,6 +397,41 @@ module.exports = {
                     else {
                         value = self.process(ifTrue);
                     }
+                }
+                return value;
+            }
+        },
+        {
+            symbol : 'lambda',
+            operation : function (sexpr) {
+                var length = size(sexpr);
+                var node, value;
+                var condition, ifTrue, ifFalse;
+                
+                if (length != 2) {
+                    console.log('bad syntax');
+                    console.log('has ' + length + ' parts after keyword');
+                }
+                else {
+                    formals = sexpr.car;
+                    body = sexpr.cdr.car;
+
+                    node = AList.lookup(sexpr.car.val);
+                    
+                    if (node.type != Constant.NIL) {
+                        node = {};
+                        node.type = Constant.LAMBDA;
+                        node.formals = formals;
+                        node.body = body;
+                    }
+                    else {
+                        AList.push(List.improper(
+                            List.element(Constant.SYMBOL, 'test'),
+                            {
+                                type : Constant.LAMBDA,
+                                formals : formals,
+                                body : body
+                            }));
                     }
                 }
                 return value;
