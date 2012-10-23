@@ -390,11 +390,12 @@ module.exports = {
                     condition = sexpr.car;
                     ifTrue = sexpr.cdr.car;
                     ifFalse = sexpr.cdr.cdr.car;
-                    if (self.process(condition).val == Constant.TRUE) {
+                    if (self.process(condition).val == Constant.FALSE) {
+                        value = self.process(ifFalse);
+                    }
+                    else {
                         value = self.process(ifTrue);
                     }
-                    else{
-                        value = self.process(ifFalse);
                     }
                 }
                 return value;
