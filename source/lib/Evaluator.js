@@ -410,25 +410,13 @@ module.exports = {
                     formals = sexpr.car;
                     body = sexpr.cdr.car;
 
-                    node = AList.lookup(sexpr.car.val);
-                    
-                    if (node.type != Constant.NIL) {
-                        node = {};
-                        node.type = Constant.LAMBDA;
-                        node.formals = formals;
-                        node.body = body;
-                    }
-                    else {
-                        AList.push(List.improper(
-                            List.element(Constant.SYMBOL, 'test'),
-                            {
-                                type : Constant.LAMBDA,
-                                formals : formals,
-                                body : body
-                            }));
-                    }
+                    node = {
+                            type : Constant.LAMBDA,
+                            formals : formals,
+                            body : body
+                        };
                 }
-                return value;
+                return node;
             }
         },
     ],
