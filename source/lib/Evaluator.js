@@ -15,8 +15,14 @@ var self;
  
  ******************************************************************************/
 
-function dump (x) {
-    console.log(JSON.stringify(x, null, 4));
+function dump (object, message) {
+    console.log('*** DUMP ***');
+    if (message != undefined) {
+        console.log(message);
+    }
+    console.log('== OBJECT ==');
+    console.log(JSON.stringify(object, null, 4));
+    console.log('============');
 };
 
 
@@ -77,7 +83,7 @@ module.exports = {
         if (aExpr == null) return aExpr;
         
         var theResults = self.process(aExpr);
-//        dump(theResults);
+        dump(theResults, 'evaluate');
         
         return self.display(theResults);
     },
@@ -96,24 +102,46 @@ module.exports = {
             return self.process_extended(aExpr);
         }
         else if (aExpr.type == Constant.SYMBOL){
-//            console.log('aExpr.type: ' + aExpr.type + ' <=> ' + Constant.SYMBOL);
+            console.log('aExpr.type: ' + aExpr.type + ' <=> ' + Constant.SYMBOL);
             node = AList.lookup(aExpr.val);
             if (node.type == Constant.PRIMITIVE) {
+                console.log("process PRIMITIVE: " + aExpr.val);
                 return self._primitive[node.val].operation;
             }
             else if (node.type == Constant.NIL) {
                 console.log("Undefined symbol: " + aExpr.val);
                 return node;
             }
+            return node;
         }
         else { // an atom
-//            console.log('atom :[' + aExpr.type + ']');
+            console.log('atom :[' + aExpr.type + ']');
             return aExpr;
         }
         
         return null;
     },
     
+
+/******************************************************************************
+ 
+    process_macro
+ 
+ ******************************************************************************/
+ 
+    process_macro : function (aExpr, aSExpr) {
+        console.log('process_macro');
+        dump(aExpr, 'aExpr');
+        dump(aSExpr, 'aSExpr');
+        
+        if (aExpr.type == Constant.LAMBDA) {
+            console.log('process_macro LAMBDA');
+            return (aExpr);
+        }
+
+        return aExpr;
+    },
+ 
 
 /******************************************************************************
  
@@ -142,32 +170,31 @@ module.exports = {
            console.log('theCar.type: ' + theCar.type + ' <=> ' + Constant.SYMBOL);
             node = AList.lookup(theCar.val);
             if (node.type == Constant.PRIMITIVE) {
+                console.log('process_extended SYMBOL PRIMITIVE');
                 primitive = self._primitive[node.val].operation(theCdr);
-                if (primitive.type == Constant.LAMBDA) {
-                    console.log('lambda');
-                    dump(primitive);
-                    primitive = self.process_extended(primitive);
+                dump(primitive);
+                if (primitive.type == Constant.NIL) {
+                    console.log('process_extended SYMBOL PRIMITIVE NIL');
+                }
+                else {
+                    console.log('process_extended SYMBOL PRIMITIVE OTHER');
+                    primitive = self.process_macro(primitive, theCdr);
                 }
                 return primitive;
             }
             else if (node.type == Constant.LAMBDA) {
-                console.log('process_extended LAMBDA');
+                console.log('process_extended SYMBOL LAMBDA');
                 node = self._primitive[node.val].operation(theCdr);
-                return self.process_extended(node);
+                return self.process_macro(node, theCdr.cdr);
             }
             else if (node.type != Constant.NIL) {
-                console.log("process_extended null");
+                console.log('process_extended SYMBOL NIL');
                 return node;
             }
             else {
-                console.log("Undefined symbol: " + theCar.val);
+                console.log('Undefined symbol: ' + theCar.val);
                 return null;
             }
-        }
-        else if (theCar.type == Constant.LAMBDA) {
-            console.log('theCar.type: ' + theCar.type + ' <=> ' + Constant.LAMBDA);
-//            node = self._primitive[node.val].operation(aExpr);
-            return theCdr;
         }
 
 //        console.log('type [' + theCar.type + '][' + theCar.val + ']');
@@ -175,6 +202,7 @@ module.exports = {
         
         return theReturnValue;
     },
+
 
 /******************************************************************************
  
@@ -254,10 +282,14 @@ module.exports = {
                 }
                 else {
                     if (sexpr.cdr.type = Constant.CONS) {
-                        value = self.process(sexpr.cdr.car);                        
+                        value = self.process(sexpr.cdr.car);
                     }
                     else{
                         value = sexpr.cdr;
+                    }
+
+                    if (value == null) {
+                        return List.nil;
                     }
 
                     node = AList.lookup(sexpr.car.val);
@@ -282,7 +314,7 @@ module.exports = {
                 while (sexpr.type != Constant.NIL) {
                     valueNode = self.process(sexpr.car);
                     if (valueNode == null) {
-                        result = List.NIL;
+                        result = List.nil;
                         break;
                     }
                     result.val += valueNode.val;
@@ -301,7 +333,7 @@ module.exports = {
                 while (sexpr.type != Constant.NIL) {
                     valueNode = self.process(sexpr.car);
                     if (valueNode == null) {
-                        result = List.NIL;
+                        result = List.nil;
                         break;
                     }
                     result.val -= valueNode.val;
@@ -320,7 +352,7 @@ module.exports = {
                 while (sexpr.type != Constant.NIL) {
                     valueNode = self.process(sexpr.car);
                     if (valueNode == null) {
-                        result = List.NIL;
+                        result = List.nil;
                         break;
                     }
                     result.val *= valueNode.val;
@@ -351,7 +383,7 @@ module.exports = {
                         while (sexpr.type != Constant.NIL) {
                             valueNode = self.process(sexpr.car);
                             if (valueNode == null) {
-                                return List.NIL;
+                                return List.nil;
                             }
                             result.val /= valueNode.val;
                             sexpr = sexpr.cdr
@@ -418,6 +450,7 @@ module.exports = {
                 if (length != 2) {
                     console.log('bad syntax');
                     console.log('has ' + length + ' parts after keyword');
+                    return List.nil;
                 }
                 else {
                     formals = sexpr.car;
