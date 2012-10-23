@@ -91,8 +91,6 @@ module.exports = {
 
     process : function (aExpr) {
 //        console.log('process');
-        var theReturnValue;
-        
         if (aExpr.type == Constant.CONS) { // a list
 //            console.log('aExpr.type: ' + aExpr.type + ' <=> ' + Constant.CONS);
             return self.process_extended(aExpr);
@@ -100,21 +98,20 @@ module.exports = {
         else if (aExpr.type == Constant.SYMBOL){
 //            console.log('aExpr.type: ' + aExpr.type + ' <=> ' + Constant.SYMBOL);
             node = AList.lookup(aExpr.val);
-            if (node.type == Constant.NIL) {
-                console.log("Undefined symbol: " + aExpr.val);
-                return null;
-            }
-            else if (node.type == Constant.PRIMITIVE) {
+            if (node.type == Constant.PRIMITIVE) {
                 return self._primitive[node.val].operation;
             }
-            return node;
+            else if (node.type == Constant.NIL) {
+                console.log("Undefined symbol: " + aExpr.val);
+                return node;
+            }
         }
         else { // an atom
 //            console.log('atom :[' + aExpr.type + ']');
             return aExpr;
         }
         
-        return theReturnValue;
+        return null;
     },
     
 
@@ -125,27 +122,41 @@ module.exports = {
  ******************************************************************************/
  
     process_extended : function (aExpr) {
+        console.log('process_extended');
+        dump(aExpr);
+        
+        // check for lambda here
+
         var theReturnValue;
+        var node, primitive;
         
         var theCar = aExpr.car;
         var theCdr = aExpr.cdr;
         
         if (theCar.type == Constant.CONS) {
-//            console.log('theCar.type: ' + theCar.type + ' <=> ' + Constant.CONS);
+            console.log('theCar.type: ' + theCar.type + ' <=> ' + Constant.CONS);
             theCar = self.process(theCar.car);
         }
         
         if (theCar.type == Constant.SYMBOL) {
-//            console.log('theCar.type: ' + theCar.type + ' <=> ' + Constant.SYMBOL);
+           console.log('theCar.type: ' + theCar.type + ' <=> ' + Constant.SYMBOL);
             node = AList.lookup(theCar.val);
             if (node.type == Constant.PRIMITIVE) {
-                return self._primitive[node.val].operation(aExpr.cdr);
+                primitive = self._primitive[node.val].operation(theCdr);
+                if (primitive.type == Constant.LAMBDA) {
+                    console.log('lambda');
+                    dump(primitive);
+                    primitive = self.process_extended(primitive);
+                }
+                return primitive;
             }
             else if (node.type == Constant.LAMBDA) {
                 console.log('process_extended LAMBDA');
-                return List.nil;
+                node = self._primitive[node.val].operation(theCdr);
+                return self.process_extended(node);
             }
             else if (node.type != Constant.NIL) {
+                console.log("process_extended null");
                 return node;
             }
             else {
@@ -154,7 +165,9 @@ module.exports = {
             }
         }
         else if (theCar.type == Constant.LAMBDA) {
-//            console.log('theCar.type: ' + theCar.type + ' <=> ' + Constant.LAMBDA);
+            console.log('theCar.type: ' + theCar.type + ' <=> ' + Constant.LAMBDA);
+//            node = self._primitive[node.val].operation(aExpr);
+            return theCdr;
         }
 
 //        console.log('type [' + theCar.type + '][' + theCar.val + ']');
