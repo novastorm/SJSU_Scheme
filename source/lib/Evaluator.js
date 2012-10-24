@@ -171,7 +171,7 @@ module.exports = {
             node = AList.lookup(theCar.val);
             if (node.type == Constant.PRIMITIVE) {
                 console.log('process_extended SYMBOL PRIMITIVE');
-                primitive = self._primitive[node.val].operation(theCdr);
+                primitive = self._primitive[node.val].operation(theCdr, AList);
                 dump(primitive);
                 if (primitive.type == Constant.NIL) {
                     console.log('process_extended SYMBOL PRIMITIVE NIL');
@@ -442,7 +442,7 @@ module.exports = {
         },
         {
             symbol : 'lambda',
-            operation : function (sexpr) {
+            operation : function (sexpr, alist) {
                 var length = size(sexpr);
                 var node;
                 var condition, ifTrue, ifFalse;
@@ -458,6 +458,7 @@ module.exports = {
 
                     node = {
                             type : Constant.LAMBDA,
+                            alist : alist,
                             formals : formals,
                             body : body
                         };
