@@ -109,6 +109,7 @@ module.exports = {
                 return self._primitive[node.val].operation;
             }
             else if (node.type == Constant.NIL) {
+                console.log("process NIL: " + aExpr.val);
                 console.log("Undefined symbol: " + aExpr.val);
                 return node;
             }
@@ -133,9 +134,13 @@ module.exports = {
         console.log('process_macro');
         dump(aExpr, 'aExpr');
         dump(aSExpr, 'aSExpr');
+
+        var numberOfFormalArguments, numberOfActualArguments;
         
         if (aExpr.type == Constant.LAMBDA) {
+            
             console.log('process_macro LAMBDA');
+            console.log('formals [' + numberOfFormalArguments + '] actuals [' + numberOfActualArguments + ']');
             return (aExpr);
         }
 
@@ -154,6 +159,11 @@ module.exports = {
         dump(aExpr);
         
         // check for lambda here
+        if (aExpr.type == Constant.LAMBDA) {
+            console.log('process_extended LAMBDA');
+            node = self._primitive[node.val].operation(theCdr);
+            return self.process_macro(node, theCdr.cdr);
+        }
 
         var theReturnValue;
         var node, primitive;
@@ -172,18 +182,15 @@ module.exports = {
             if (node.type == Constant.PRIMITIVE) {
                 console.log('process_extended SYMBOL PRIMITIVE');
                 primitive = self._primitive[node.val].operation(theCdr, AList);
-                dump(primitive);
-                if (primitive.type == Constant.NIL) {
-                    console.log('process_extended SYMBOL PRIMITIVE NIL');
-                }
-                else {
-                    console.log('process_extended SYMBOL PRIMITIVE OTHER');
-                    primitive = self.process_macro(primitive, theCdr);
-                }
                 return primitive;
             }
             else if (node.type == Constant.LAMBDA) {
                 console.log('process_extended SYMBOL LAMBDA');
+                return self.process_macro(node, theCdr);
+                if (theCdr.type == Constant.NIL) {
+                    console.log('bad syntax');
+                    console.log('has ' + length + ' parts after keyword');
+                }
                 node = self._primitive[node.val].operation(theCdr);
                 return self.process_macro(node, theCdr.cdr);
             }
@@ -192,6 +199,7 @@ module.exports = {
                 return node;
             }
             else {
+                console.log('process_extended ELSE');
                 console.log('Undefined symbol: ' + theCar.val);
                 return null;
             }
